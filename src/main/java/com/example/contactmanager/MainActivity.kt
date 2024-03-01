@@ -172,12 +172,11 @@ class MainActivity : Activity() {
     class CalcDupRunnable(private val contentResolver: ContentResolver, private val handler: Handler) : Runnable {
         private fun normalize(number: String): String {
             val regex = Regex("[^0-9+]")
-            val numberClean = regex.replace(number, "")
-            if (numberClean.startsWith("+")) {
-                numberClean.removeRange(0,3)
-                if (numberClean.startsWith("9")) {
-                    numberClean.removeRange(0,1)
-                }
+            var numberClean = regex.replace(number, "")
+            if (numberClean[0] == '+') {
+                Log.d("MSJ","ENCONTRADO EN $numberClean")
+                numberClean = numberClean.removeRange(0,3)
+                if (numberClean[0] == '9') numberClean = numberClean.removeRange(0, 1)
             }
             return numberClean
         }
@@ -227,30 +226,40 @@ class MainActivity : Activity() {
 
         override fun run() {
             val contactList = calcContacts()
-            Log.d("MENSAJE","Se ha terminado la buscqueda de contactos")
-            for (i in contactList.indices) {
-                val contact1 = contactList[i]
-                if (!contact1.isUnique) continue
-                val repeatedSet = mutableListOf<Contact>()
-                for (number1 in contact1.numbers) {
-                    var normNumber1 = normalize(number1)
-                    for (j in i + 1 until contactList.size) {
-                        val contact2 = contactList[j]
-                        for (number2 in contact2.numbers) {
-                            if (normNumber1 == normalize(number2)) {
-                                if (contact1.isUnique) {
-                                    repeatedSet.add(contact1)
-                                    contact1.isUnique = false
-                                }
-                                repeatedSet.add(contact2)
-                                contact2.isUnique = false
-                                val messageObj = handler.obtainMessage(0, repeatedSet)
-                                handler.sendMessage(messageObj)
-                            }
-                        }
+            val numberHash = HashMap<String, String>()
+            val idsHash = HashMap<String, List<String>>()
+            Log.d("MENSAJE","Se ha terminado la busqueda de contactos")
+
+            // We separate ids with same numbers in idsHash map
+            for (contact in contactList) {
+                idsHash[contact.id] = mutableListOf<String>()
+                val unrepeatedNumbersSet = mutableSetOf<String>()
+                for (number in contact.numbers) unrepeatedNumbersSet.add(normalize(number))
+                Log.d("MENSAJE","A ${contact.name}: $unrepeatedNumbersSet")
+                for (number in unrepeatedNumbersSet) {
+                    if (numberHash.containsKey(number)) {
+                        val id = numberHash[number]!!
+                        val existingList = idsHash[id]!!.toMutableList()
+                        existingList.add(contact.id)
+                        idsHash[id] = existingList
+                    } else {
+                        numberHash[number] = contact.id
                     }
                 }
             }
+            // For every non-empty value of idsHash, we send a List to the main activity
+            for (id in idsHash) {
+                if (id.value.isNotEmpty()) {
+                    val repeatedSet = mutableListOf<Contact>()
+                    val ids = id.value.toMutableList()
+                    ids.add(id.key)
+                    for (i in ids) repeatedSet.add(contactList.find { it.id == i }!!)
+
+                    val messageObj = handler.obtainMessage(0, repeatedSet)
+                    handler.sendMessage(messageObj)
+                }
+            }
+            // We send a final message to tell the thread is over
             val messageObj = handler.obtainMessage(0, mutableListOf<Contact>())
             handler.sendMessage(messageObj)
         }
