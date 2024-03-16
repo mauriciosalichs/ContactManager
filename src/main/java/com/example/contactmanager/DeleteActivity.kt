@@ -31,6 +31,9 @@ class DeleteActivity : AppCompatActivity() {
         deleteButton.visibility = View.INVISIBLE
 
         searchButton.setOnClickListener {
+            if (editText.text.isEmpty()){
+                return@setOnClickListener
+            }
             contactList.clear()
             val pattern = editText.text.toString().lowercase(Locale.ROOT)
             val nameMap = applicationContext.getSharedPreferences("nameMap", Context.MODE_PRIVATE).all

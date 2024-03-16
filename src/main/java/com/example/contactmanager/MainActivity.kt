@@ -2,7 +2,9 @@ package com.example.contactmanager
 
 //import android.Manifest
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.telephony.TelephonyManager
@@ -31,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         updateContactsB = findViewById(R.id.updateContactsButton)
         configB = findViewById(R.id.configButton)
 
+        val configMap = applicationContext.getSharedPreferences("configMap", Context.MODE_PRIVATE)
+
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_PHONE_STATE), 1)
         }
@@ -58,6 +62,16 @@ class MainActivity : AppCompatActivity() {
         }
         configB.setOnClickListener {
             startActivity(Intent(this, ConfigActivity::class.java))
+        }
+
+        if (!configMap.all.containsKey("alreadyOpen")) {
+            val editor : SharedPreferences.Editor = configMap.edit()
+            editor.putBoolean("alreadyOpen", true)
+            editor.apply()
+            val intent = Intent(this, UpdateActivity::class.java).apply {
+                putExtra("firstTime", true)
+            }
+            startActivity(intent)
         }
     }
 }

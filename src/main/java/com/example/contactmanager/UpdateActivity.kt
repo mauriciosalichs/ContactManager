@@ -6,28 +6,32 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract
-import android.util.Log
-import android.widget.Button
-import android.widget.TextView
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.provider.ContactsContract
+import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TableRow
+import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import java.lang.ref.WeakReference
+
 
 class UpdateActivity : Activity() {
 
     private lateinit var currentContactBeingShownTextView: TextView
-    private lateinit var dupCountTextView: TextView
+    private lateinit var infoLabel: TextView
     private lateinit var contactOptionsField: TableRow
     private lateinit var startButton: Button
     private val outerClass = WeakReference<UpdateActivity>(this)
@@ -55,9 +59,17 @@ class UpdateActivity : Activity() {
         val nameMap = applicationContext.getSharedPreferences("nameMap", Context.MODE_PRIVATE)
         val numberMap = applicationContext.getSharedPreferences("numberMap", Context.MODE_PRIVATE)
         currentContactBeingShownTextView = findViewById(R.id.currentContactBeingShown)
-        dupCountTextView = findViewById(R.id.dupCount)
+        infoLabel = findViewById(R.id.infoLabel)
         startButton = findViewById(R.id.updateButton)
         contactOptionsField = findViewById(R.id.contactOptionsField)
+        var firstTime = false
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_CONTACTS), 1)
+        }
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.WRITE_CONTACTS), 1)
+        }
 
         val handler = object: Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
@@ -86,10 +98,16 @@ class UpdateActivity : Activity() {
         startButton.setOnClickListener {
             val contentResolver: ContentResolver = contentResolver
             if (!searchDone) {
+                if (firstTime) {
+                    firstTime = false
+                    Thread(updateRunnable).start()
+                    startButton.text = "Actualizando base de datos..."
+                } else {
+                    val calcDupRunnable = CalcDupRunnable(contentResolver, handler)
+                    Thread(calcDupRunnable).start()
+                    startButton.text = "Buscando contactos duplicados..."
+                }
                 startButton.isEnabled = false
-                startButton.text = "Actualizando base de datos..."
-                //val calcDupThread = Thread(CalcDupRunnable(contentResolver, handler))
-                Thread(updateRunnable).start()
             } else {
                 deleteAllUnselectedContacts(contentResolver)
                 startButton.isEnabled = false
@@ -97,11 +115,19 @@ class UpdateActivity : Activity() {
                 currentContactBeingShownTextView.isVisible = false
             }
         }
+
+        val extras = intent.extras
+        if (extras == null) {
+            Log.d("FIRST TIME","blabla")
+            //startButton.performClick()
+            firstTime = true
+            infoLabel.text = "Se aconseja actualizar la base de datos en la primera ejecución."
+        }
     }
 
     fun addDupContact(dups: List<Contact>) {
         dupCounter++
-        dupCountTextView.text = "Contactos duplicados: " + dupCounter.toString()
+        infoLabel.text = "Contactos duplicados: " + dupCounter.toString()
         val selPage = SelectionPage(dups, -1)
         dupContacts.add(selPage)
         if (dupCounter == 1) {
@@ -110,13 +136,13 @@ class UpdateActivity : Activity() {
     }
 
     fun updateHasFinished(count: String) {
-        dupCountTextView.text = "Se han agregado $count contactos\n a la base de datos interna."
+        infoLabel.text = "Se han agregado $count contactos\n a la base de datos interna."
         startButton.text = "Actualizar base de datos"
         startButton.isEnabled = true
     }
 
     fun searchHasFinished() {
-        dupCountTextView.text = "Se han encontrado $dupCounter contactos\n duplicados en total."
+        infoLabel.text = "Se han encontrado $dupCounter contactos\n duplicados en total."
         searchDone = true
         startButton.text = "Eliminar contactos duplicados"
         startButton.isEnabled = true
@@ -136,7 +162,7 @@ class UpdateActivity : Activity() {
                 }
             }
         }
-        dupCountTextView.text = "Se han eliminado $count\n contactos duplicados."
+        infoLabel.text = "Se han eliminado $count\n contactos duplicados."
     }
 
     fun showPage(page: Int) {
@@ -346,12 +372,6 @@ class UpdateActivity : Activity() {
             handler.sendMessage(messageObj)
         }
     }
-
-    data class ContactInfo(
-        val id: String,
-        val name: String,
-        val numbers: List<String>,
-    )
 
     data class Contact(
         val id: String,
