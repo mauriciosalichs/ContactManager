@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <CheckBox
+        android:id="@+id/defaultCodeCB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Código de país por defecto" />
+
+    <EditText
+        android:id="@+id/defaultPrefix"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/defaultCodeCB"
+        android:layout_marginStart="16dp"
+        android:layout_toEndOf="@id/defaultCodeCB"
+        android:enabled="false"
+        android:inputType="number" />
+
+    <CheckBox
+        android:id="@+id/foreingClipboardCB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/defaultCodeCB"
+        android:layout_marginBottom="16dp"
+        android:text="Crear contacto cuando se copia un número" />
+
+    <CheckBox
+        android:id="@+id/autoUpdateCB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/foreingClipboardCB"
+        android:layout_marginBottom="16dp"
+        android:text="Actualización auto de contactos cada X días" />
+
+    <!-- Add more checkboxes as needed -->
+
+</RelativeLayout>

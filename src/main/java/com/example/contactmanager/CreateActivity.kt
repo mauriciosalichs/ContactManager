@@ -11,11 +11,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.ContactsContract
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import java.util.Locale
 
 class CreateActivity : AppCompatActivity() {
 
@@ -48,6 +51,28 @@ class CreateActivity : AppCompatActivity() {
         val numberMapEditor: SharedPreferences.Editor = numberMap.edit()
         var completeNumber: String = ""
 
+        prefixText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                //TODO: RESOLVE THIS
+                var code = ""
+                val codes = resources.getStringArray(R.array.CountryCodes)
+                for (i in codes.indices) {
+                    val g: List<String> = codes[i].split(",")
+                    if (g[1].trim { it <= ' ' } == s.toString()) {
+                        code = g[0]
+                        break
+                    }
+                }
+                val locale = Locale("es-ES", code)
+                Log.d("PAIS",s.toString()+" "+locale.displayCountry)
+            }
+        })
+
+        prefixText.text = retrieveDefaultCountryPrefix()
         copyFromClipboard = Runnable {
             checkClipboardContent(clipboardManager)
         }
@@ -103,14 +128,12 @@ class CreateActivity : AppCompatActivity() {
         val clip: ClipData? = clipboardManager.primaryClip
         if (clip != null && clip.itemCount > 0) {
             val clipboardText = clip.getItemAt(0).text.toString()
-            val numberRegex = Regex("[^0-9+]")
-            var clipboardNumber = numberRegex.replace(clipboardText,"")
-            if (clipboardNumber.startsWith("+") && clipboardNumber.length > 3) {
+            val clipboardNumber = Regex("\\+?\\d{6,}").find(clipboardText)?.value ?: ""
+            if (clipboardNumber.startsWith("+")) {
                 val pairPrefixNumber = retrievePrefixAndNumber(clipboardNumber)
                 prefixText.text = pairPrefixNumber.first
                 numberText.text = pairPrefixNumber.second
-            } else {
-                prefixText.text = retrieveDefaultCountryPrefix()
+            } else if (clipboardNumber.isNotEmpty()) {
                 numberText.text = clipboardNumber
             }
         }
@@ -122,7 +145,8 @@ class CreateActivity : AppCompatActivity() {
     }
 
     private fun retrieveDefaultCountryPrefix(): String {
-        return "54"
+        val configValues = applicationContext.getSharedPreferences("configValues", Context.MODE_PRIVATE).all
+        return if (configValues.containsKey("defaultPrefix")) configValues["defaultPrefix"] as String else ""
     }
 
     private fun addContactToPhone(name: String, phone: String): String {

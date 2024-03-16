@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var modifyContactB: Button
     private lateinit var deleteContactB: Button
     private lateinit var updateContactsB: Button
+    private lateinit var configB: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         modifyContactB = findViewById(R.id.modifyContactButton)
         deleteContactB = findViewById(R.id.deleteContactButton)
         updateContactsB = findViewById(R.id.updateContactsButton)
+        configB = findViewById(R.id.configButton)
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_PHONE_STATE), 1)
@@ -49,10 +51,13 @@ class MainActivity : AppCompatActivity() {
             //startActivity(Intent(this, ModifyActivity::class.java))
         }
         deleteContactB.setOnClickListener {
-            //startActivity(Intent(this, DeleteActivity::class.java))
+            startActivity(Intent(this, DeleteActivity::class.java))
         }
         updateContactsB.setOnClickListener {
             startActivity(Intent(this, UpdateActivity::class.java))
+        }
+        configB.setOnClickListener {
+            startActivity(Intent(this, ConfigActivity::class.java))
         }
     }
 }

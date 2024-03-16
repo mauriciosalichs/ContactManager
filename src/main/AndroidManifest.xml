@@ -18,7 +18,7 @@
             android:name=".MainActivity"
             android:theme="@style/Theme.AppCompat.Light"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="Gestor de contactos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -29,7 +29,7 @@
             android:name=".CreateActivity"
             android:theme="@style/Theme.AppCompat.Light"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="Crear contacto">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -39,7 +39,27 @@
             android:name=".UpdateActivity"
             android:theme="@style/Theme.AppCompat.Light"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="Actualizar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ConfigActivity"
+            android:theme="@style/Theme.AppCompat.Light"
+            android:exported="true"
+            android:label="Configuración">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".DeleteActivity"
+            android:theme="@style/Theme.AppCompat.Light"
+            android:exported="true"
+            android:label="Eliminar contacto">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
